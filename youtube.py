@@ -4,7 +4,7 @@ import googleapiclient.errors
 import pandas as pd
 from IPython.display import JSON
 
-API_KEY = 'AIzaSyBKENtAZHb4HDC8NlyQr9Y5A-RT6rERVb4'
+
 channel_id = 'UC75V5b1wgQgf0cU_QN6Vw2g'
 
 api_service_name = "youtube"
