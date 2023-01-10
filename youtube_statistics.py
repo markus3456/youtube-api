@@ -1,16 +1,17 @@
 import requests 
 import json
-from tqdm import tqdm
+
 
 
 
 class YTstats:
 
-    def __init__(self, api_key, Channel_id):
+    def __init__(self, api_key, Channel_id, search):
         self.api_key = api_key
         self.channel_id = Channel_id
         self.channel_statistics = None
         self.video_data = None
+        self.search = search
 
     def get_channel_statistics(self):
         url = f'https://www.googleapis.com/youtube/v3/channels?part=statistics&id={self.channel_id}&key={self.api_key}'
@@ -90,6 +91,35 @@ class YTstats:
         
         return channel_videos, nextPageToken
 
+    def get_videos_by_search(self, limit=50):
+        url =f'https://www.googleapis.com/youtube/v3/search?key={self.api_key}&q={self.search}'
+        if limit is not None and isinstance(limit, int):
+            url += "&maxResults" + str(limit)
+
+        vid = self._get_search_videos(url)
+        print(vid)
+        print(len(vid))
+        return vid
+
+    def _get_search_videos(self, url):
+        json_url = requests.get(url)
+        data = json.loads(json_url.text)
+        searched_videos = dict()
+        if 'items' not in data:
+            return searched_videos, None
+        
+        item_data = data['items']
+        nextPageToken = data.get("nextPageToken", None)
+        for item in item_data:
+            try:
+                kind = item['id']['kind']
+                if kind == 'youtube#video':
+                    video_id = item['id']['videoId']
+                    searched_videos[video_id] = dict()
+            except KeyError:
+                print("Key error")
+        
+        return searched_videos, nextPageToken
 
 
     def dump(self):
@@ -107,4 +137,4 @@ class YTstats:
         
         print('file dumped')
 
-    #get_channel_statistics()
+    
