@@ -45,6 +45,7 @@ class YTstats:
 
     def _get_single_video_data(self, video_id, part):
         url = f'https://www.googleapis.com/youtube/v3/videos?part={part}&id={video_id}&key={self.api_key}'
+        #print(url)
         json_url = requests.get(url)
         data = json.loads(json_url.text)
         try: 
@@ -92,13 +93,36 @@ class YTstats:
         return channel_videos, nextPageToken
 
     def get_videos_by_search(self, limit=50):
+        #1. get vidoe ids
+        searched_videos = self._get_search_video_id(limit=50)
+        print(searched_videos)
+        print(len(searched_videos))
+        
+        #2. get video statistics
+        parts = ["snippet","statistics","contentDetails"]
+        for video_id in searched_videos:
+            for part in parts:
+                data = self._get_single_video_data(video_id, part)
+                searched_videos[video_id].update(data)
+        
+        self.video_data = searched_videos
+        return searched_videos
+    
+    def _get_search_video_id(self, limit):
         url =f'https://www.googleapis.com/youtube/v3/search?key={self.api_key}&q={self.search}'
+        print(url)
         if limit is not None and isinstance(limit, int):
             url += "&maxResults" + str(limit)
 
-        vid = self._get_search_videos(url)
-        print(vid)
-        print(len(vid))
+        vid, npt = self._get_channel_videos_per_page(url)
+        idx = 0
+
+        while(npt is not None and idx < 10):
+            nexturl = url + "&pageToken=" + npt
+            next_vid, npt = self._get_channel_videos_per_page(nexturl)
+            vid.update(next_vid)
+            idx +=  1
+
         return vid
 
     def _get_search_videos(self, url):
@@ -116,6 +140,7 @@ class YTstats:
                 if kind == 'youtube#video':
                     video_id = item['id']['videoId']
                     searched_videos[video_id] = dict()
+                    print(video_id)
             except KeyError:
                 print("Key error")
         
@@ -127,6 +152,7 @@ class YTstats:
             print('data is none')
             return
         
+        
         fused_data = {self.channel_id: {"channel_statistics": self.channel_statistics, "video_data": self.video_data}}
 
         channel_title = self.video_data.popitem()[1].get('channelTitle', self.channel_id)
@@ -137,4 +163,15 @@ class YTstats:
         
         print('file dumped')
 
-    
+    def dump2(self):
+        if self.video_data is None:
+            print("data is none")
+            return
+        
+        #fused_data = {self.channel_id: {"channel_statistics": self.channel_statistics, "video_data": self.video_data}}
+
+        file_name = 'search.json'
+        with open(file_name, 'w') as f:
+            json.dump(self.video_data, f, indent=4)
+        
+        print('file dumped')
