@@ -7,9 +7,11 @@ search = 'yamaha xv750'
 
 yt = YTstats(API_KEY, Channel_id, search)
 
-#yt.get_channel_statistics()
-#yt.get_channel_video_data()
-yt.get_videos_by_search()
-yt.dump2()
+yt.get_channel_statistics()
+yt.get_channel_video_data()
+
+#yt.get_videos_by_search()
+yt.dump()
+#yt.dump2()
 
 

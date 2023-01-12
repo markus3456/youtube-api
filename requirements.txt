@@ -2,4 +2,4 @@ matplotlib
 pandas
 ipython
 requests
-
+psycopg2
